@@ -1,0 +1,133 @@
+query Persons {
+	allPersons {
+  	id
+    givenName
+    surname
+    address
+    affiliations {
+      id
+      organization {
+        name
+        address
+        parent {
+          name
+        }
+      }
+      role {
+        name
+        description
+      }
+    }
+    relations {
+      id
+      p2 {
+        givenName
+        id
+      }
+      kind
+    }
+  } 
+}
+
+query PersonById {
+  personById(id: "p_06") {
+    givenName
+    surname
+    affiliations {
+      organization {
+        name,
+        parent {
+          name
+        }
+      },
+      role {
+        name,
+        description
+      }
+    	since      
+    }
+    relations {
+      p2 {
+        surname
+      }
+      kind
+      since
+      notes
+    }
+  }
+}
+
+query Organizations {
+  allOrganizations {
+    name
+    address
+    parent {
+      name
+      address
+    }
+  }
+}
+
+mutation Mutation {
+	createPersons(personsInput: [
+    {
+    	id: "p_06"
+   	 	givenName: "Amit"
+    	surname: "Srivastava"
+    	born: 2001
+    	affiliations: [
+        {
+          id: "a_09"
+          organizationId: "o_b1"
+          roleId: "l_st"
+          since: 2019
+        }
+      ],
+      relations: [
+      	{
+          id: "r_05"
+          p2Id: "p_03"
+          kind: "superior"
+          since: 2019
+          notes: "a"    
+        }
+        {
+          id: "r_06"
+          p2Id: "p_04"
+          kind: "friends"
+          since: 2019
+          notes: "the closest friend"    
+        }
+    ] 
+  }
+  {
+    id: "p_07"
+    givenName: "Matteo"
+    surname: "Feretti"
+    born: 1999
+    affiliations: [
+        {
+          id: "a_10"
+          organizationId: "o_a2"
+          roleId: "l_st"
+          since: 2017
+        }
+    	]
+      relations: [
+        {
+					id: "r_07"
+          p2Id: "p_01"
+          kind: "superior"
+          since: 2017
+        }
+        {
+					id: "r_08"
+          p2Id: "p_02"
+          kind: "superior"
+          since: 2017
+        }
+    	]
+    }
+  ])
+}
+

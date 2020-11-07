@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { Connection } from 'typeorm';
 import { SqlTransaction } from 'sql-base-lib';
-import { Relation } from './entities/relation.entity';
-import { Affiliation } from './entities/affiliation.entity';
-import { Person } from './entities/person.entity';
-import { Organization } from './entities/organization.entity';
-import { Role } from './entities/role.entity';
+import { Relation } from '../../nestjs-graphql-service/src/sql/entities/relation.entity';
+import { Affiliation } from '../../nestjs-graphql-service/src/sql/entities/affiliation.entity';
+import { Person } from '../../nestjs-graphql-service/src/sql/entities/person.entity';
+import { Organization } from '../../nestjs-graphql-service/src/sql/entities/organization.entity';
+import { Role } from '../../nestjs-graphql-service/src/sql/entities/role.entity';
 
 @Injectable()
 export class SqlService extends SqlTransaction {

@@ -40,7 +40,7 @@
     "express": "^4.17.1",
     "gql-module-lib": "../libs/gql-module-lib",
     "graphql": "^15.3.0",
-    "graphql-tools": "^6.0.15",
+    "graphql-tools": "^6.2.6",
     "guid-typescript": "^1.0.9",
     "interceptors-lib": "../libs/interceptors-lib",
     "lodash": "^4.17.19",

@@ -1,0 +1,100 @@
+type Person {
+  id: String!
+  givenName: String!
+  surname: String!
+  born: Int
+  phone: String
+  email: String
+  address: String
+  affiliations(organization: String, role: String, since: IntInput): [Affiliation]
+  relations(kind: String): [Relation]
+}
+
+type Affiliation {
+  id: String!
+  organization: Organization!
+  role: Role
+  since: Int
+}
+
+type Organization {
+  id: String!
+  name: String!
+  address: String
+  parent: Organization
+}
+
+type Role {
+  id: String!
+  name: String!
+  description: String
+}
+
+type Relation {
+  id: String!
+  kind: String!
+  p1: Person!
+  p2: Person!
+  since: Int
+  notes: String
+}
+
+type Query {
+  allPersons: [Person!]!
+  personById(id: String!): Person
+  personsBySurname(surname: String!): [Person]
+  personsByRelation(relationQueryArg: [RelationQueryArg]!): [Person]
+  allOrganizations: [Organization!]!
+}
+
+type Mutation {
+  createPersons(personsInput: [PersonInput]!): String
+}
+
+input RelationQueryArg {
+  id: String
+  kind: String
+  p1Id: String
+  p2Id: String
+  since: Int
+}
+
+input RelationInput {
+  id: String!
+  kind: String!
+  p2Id: String!
+  since: Int
+  notes: String
+}
+
+input PersonInput {
+  id: String!
+  givenName: String!
+  surname: String!
+  born: Int
+  phone: String
+  email: String
+  address: String
+  affiliations: [AffiliationInput]
+  relations: [RelationInput]
+}
+
+input AffiliationInput {
+  id: String!
+  organizationId: String!
+  roleId: String
+  since: Int
+}
+
+input IntInput {
+  _eq: Int
+  _ne: Int
+  _range: IntRange
+}
+
+input IntRange {
+  _gt: Int
+  _ge: Int
+  _lt: Int
+  _le: Int
+}

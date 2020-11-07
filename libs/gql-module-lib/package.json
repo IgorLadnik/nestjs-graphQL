@@ -1,0 +1,31 @@
+{
+  "name": "gql-module-lib",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "rimraf dist && tsc",
+    "prepare": "npm run build",
+    "prepublish": "npm run build",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@nestjs/common": "^7.4.4",
+    "@nestjs/core": "^7.4.4",
+    "@nestjs/graphql": "^7.5.5",
+    "@nestjs/passport": "^7.1.0",
+    "@types/node": "^14.10.2",
+    "apollo-server-express": "^2.18.1",
+    "common-utils-lib": "../common-utils-lib",
+    "graphql": "^15.3.0",
+    "graphql-tools": "^6.0.15",
+    "logger-lib": "../logger-lib",
+    "reflect-metadata": "^0.1.13",
+    "rimraf": "^3.0.2",
+    "rxjs": "^6.6.3",
+    "typescript": "^4.0.2"
+  }
+}

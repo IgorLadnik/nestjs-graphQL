@@ -63,15 +63,21 @@ const xx = '        database query: ';
 
 @Injectable()
 class SqlService extends SqlTransaction {
+  repoPerson;
+  repoAffiliation;
+  repoRelation;
+  repoOrganization;
+  repoRole;
+
   constructor(connection: Connection) {
     super(connection);
-  }
 
-  repoPerson = this.connection.getRepository(Person);
-  repoAffiliation = this.connection.getRepository(Affiliation);
-  repoRelation = this.connection.getRepository(Relation);
-  repoOrganization = this.connection.getRepository(Organization);
-  repoRole = this.connection.getRepository(Role);
+    this.repoPerson = this.connection.getRepository(Person);
+    this.repoAffiliation = this.connection.getRepository(Affiliation);
+    this.repoRelation = this.connection.getRepository(Relation);
+    this.repoOrganization = this.connection.getRepository(Organization);
+    this.repoRole = this.connection.getRepository(Role);
+  }
 
   // Fields  - from database
 

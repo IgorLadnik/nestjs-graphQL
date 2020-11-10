@@ -158,9 +158,25 @@ export class PersonResolver {
   @UseGuards(GqlAuthGuard, TlsGuard)
   @UseInterceptors(DurationInterceptor)
   @UseInterceptors(new ExecutionContextValidationInterceptor(new BaseExecutionContextValidator()))
-  async personsByRelation(@Args('relationQueryArg') relationQueryArg: any[]) {
+  async personsByRelation(@Context() context, @Info() info, @Args('relationQueryArg') relationQueryArg: any[]) {
+    let where = '(';
+    for (let i = 0; i < relationQueryArg.length; i++) {
+      where += `relations.kind = \'${relationQueryArg[i].kind}\'`;
+      if (i < relationQueryArg.length - 1)
+        where += ' OR ';
+    }
+    where += ')';
 
-    return []; //@@
+    return Gql.processQuery(this.service, context, info, Person,
+      async select => {
+        select = select.replace('_id', 'persons._id').replace(',id,', ',persons.id,');
+        return await this.service.repoPerson.query(
+          `SELECT ${select} 
+           FROM persons 
+           INNER JOIN relations 
+           ON persons._id = relations.p1_id OR persons._id = relations.p2_id
+           WHERE ${where}`)
+        });
   }
 
   // Args:   {personsInput: NonNullType,ListType,NamedType,PersonInput}

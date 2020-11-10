@@ -52,11 +52,7 @@ type Mutation {
 }
 
 input RelationQueryArg {
-  id: String
-  kind: String
-  p1Id: String
-  p2Id: String
-  since: Int
+  kind: String!
 }
 
 input RelationInput {

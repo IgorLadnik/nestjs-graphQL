@@ -11,6 +11,7 @@ export class Gql {
 
     const strSelect = Gql.begin(info, cls);
     let items;
+    logger.log(`${xx} ${cls.name}:  ${strSelect}`);
     try {
       items = await fnQuery(strSelect);
     }
@@ -27,8 +28,6 @@ export class Gql {
   static async processField(info, items, cls, connection, queryTemplate) {
     const strSelect = Gql.begin(info, cls);
     const q = Gql.parseSelectQueryTemplate(queryTemplate);
-    // const arrFull = await Gql.bringDataFromDb(this.connection, persons, cls, q.in_,
-    //   `SELECT * FROM ${q.table}`, q.where);
     const arr = await Gql.bringDataFromDb(connection, items, cls, q.in_,
       `SELECT ${strSelect} FROM ${q.table}`, q.where);
     Gql.end(arr, cls);

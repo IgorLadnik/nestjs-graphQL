@@ -1,4 +1,4 @@
-query Persons {
+query AllPersons {
 	allPersons {
   	id
     givenName
@@ -57,7 +57,42 @@ query PersonById {
   }
 }
 
-query Organizations {
+query PersonsBySurname {
+  personsBySurname(surname: "Srivastava") {
+    givenName
+    affiliations {
+      organization {
+        name
+      }
+      role {
+        name
+      }
+    }
+    relations {
+      kind
+      p2 {
+        givenName
+        surname
+      }
+    }
+  }
+}
+
+query PersonsByRelations {
+  personsByRelation(relationQueryArg: [
+    {
+      kind: "friends"
+    },
+    {
+      kind: "committee"
+    }
+  ]) {
+    givenName
+    surname
+  }
+}
+
+query AllOrganizations {
   allOrganizations {
     name
     address

@@ -2,25 +2,23 @@ import { logger } from 'logger-lib';
 import { Dictionary, merge, notNil } from 'common-utils-lib';
 const _ = require('lodash');
 
-const xx = '        database query: ';
+const emptySpace = '        ';
+const xx = `${emptySpace}database query: `;
 
 export class Gql {
-  static async processQuery(service, context, info, cls, fnQuery, fnTransformResponse = undefined) {
+  static async processQuery(service, context, info, cls, queryTemplate: string,
+                            fnAdjustSelect = undefined, fnTransformResponse = undefined) {
     context.cache = new Dictionary<any>();
     context.transformResponse = fnTransformResponse;
 
-    const strSelect = Gql.begin(info, cls);
-    let items;
-    logger.log(`${xx} ${cls.name}:  ${strSelect}`);
-    try {
-      items = await fnQuery(strSelect);
-    }
-    catch (err) {
-      logger.error(err);
-    }
-
+    let strSelect = Gql.begin(info, cls);
+    if (fnAdjustSelect)
+      strSelect = fnAdjustSelect(strSelect);
+    logger.log(`${emptySpace}begin database operations: ${cls.name}, ${queryTemplate}`);
+    let items = await Gql.executeQuery(cls, service.connection, queryTemplate.replace('*', strSelect));
     Gql.end(items, cls);
     await Gql.dbToCache(service, items, context.cache, info);
+    logger.log(`${emptySpace}end database operations: ${cls.name}, ${queryTemplate}`);
 
     return items;
   }
@@ -139,7 +137,10 @@ export class Gql {
     cache.put(k, newData);
   }
 
-  private static fromCache = (cache, key: string): any => cache.get(key.toLocaleLowerCase());
+  private static fromCache = (cache, key: string): any => {
+    logger.log(`${emptySpace}${emptySpace}fromCache, ${key}`);
+    return cache.get(key.toLocaleLowerCase());
+  }
 
   static getFromCache = (context, clsName, isArray, parentId: string, ...itemIds: string[]) =>
     // similar to
@@ -204,7 +205,11 @@ export class Gql {
 
     const q = _.uniq(ids).join();
     const queryStr = `${selectFrom} WHERE ${whereIdName} IN (${q})`;
-    logger.log(`${xx} ${cls.name}:  ${queryStr}`);
+    return await Gql.executeQuery(cls, connection, queryStr);
+  }
+
+  private static async executeQuery(cls, connection, queryStr: string): Promise<any[]> {
+    logger.log(`${xx} ${cls.name},  ${queryStr}`);
     let result: any[];
     try {
       result = await connection.getRepository(cls).query(queryStr);

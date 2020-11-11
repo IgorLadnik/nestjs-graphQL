@@ -2,7 +2,7 @@ import { ISqlTransaction } from './sql-interfaces';
 import { Connection, QueryRunner } from 'typeorm/index';
 
 export class SqlTransaction implements ISqlTransaction {
-  constructor(protected connection: Connection) {}
+  constructor(public connection: Connection) {}
 
   async beginTransaction(): Promise<QueryRunner> {
     const queryRunner = this.connection.createQueryRunner();

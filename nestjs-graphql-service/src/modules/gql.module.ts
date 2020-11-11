@@ -59,8 +59,6 @@ const { getGraphQLModule } = require(isFromWeb ? `./node_modules/gql-module-lib`
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
-const xx = '        database query: ';
-
 @Injectable()
 class SqlService extends SqlTransaction {
   repoPerson;
@@ -118,8 +116,7 @@ export class PersonResolver {
   @UseInterceptors(new ExecutionContextValidationInterceptor(new BaseExecutionContextValidator()))
   async allPersons(@Context() context, @Info() info) {
     return await Gql.processQuery(this.service, context, info, Person,
-        async select => await this.service.repoPerson.query(
-          `SELECT ${select} FROM persons`));
+                'SELECT * FROM persons');
   }
 
   // Args:   {id: NonNullType,NamedType,String}
@@ -130,8 +127,8 @@ export class PersonResolver {
   @UseInterceptors(new ExecutionContextValidationInterceptor(new BaseExecutionContextValidator()))
   async personById(@Context() context, @Info() info, @Args('id') id: string) {
     const persons = await Gql.processQuery(this.service, context, info, Person,
-      async select => await this.service.repoPerson.query(
-        `SELECT ${select} FROM persons WHERE id = \'${id}\'`),
+      `SELECT * FROM persons WHERE id = \'${id}\'`,
+      undefined,
       (data, errors) => {
         if (errors) {
           errors.splice(0, errors.length);
@@ -154,8 +151,7 @@ export class PersonResolver {
   @UseInterceptors(new ExecutionContextValidationInterceptor(new BaseExecutionContextValidator()))
   async personsBySurname(@Context() context, @Info() info, @Args('surname') surname: string) {
     return Gql.processQuery(this.service, context, info, Person,
-      async select => await this.service.repoPerson.query(
-        `SELECT ${select} FROM persons WHERE surname = \'${surname}\'`));
+       `SELECT * FROM persons WHERE surname = \'${surname}\'`);
   }
 
   // Args:   {relationQueryArg: NonNullType,ListType,NamedType,RelationQueryArg}
@@ -174,15 +170,12 @@ export class PersonResolver {
     where += ')';
 
     return Gql.processQuery(this.service, context, info, Person,
-      async select => {
-        select = select.replace('_id', 'persons._id').replace(',id,', ',persons.id,');
-        return await this.service.repoPerson.query(
-          `SELECT ${select} 
+      `SELECT * 
            FROM persons 
            INNER JOIN relations 
            ON persons._id = relations.p1_id OR persons._id = relations.p2_id
-           WHERE ${where}`)
-        });
+           WHERE ${where}`,
+      select => select.replace('_id', 'persons._id').replace(',id,', ',persons.id,'));
   }
 
   // Args:   {personsInput: NonNullType,ListType,NamedType,PersonInput}
@@ -270,7 +263,6 @@ export class PersonResolver {
   private personByIdField = async (arg): Promise<Person> => {
     const strWhere = typeof arg === 'string' ? `id = \'${arg}\'` : `_id = ${arg.p2_id}`;
     const queryStr = `SELECT * FROM persons WHERE ${strWhere}`;
-    logger.log(`${xx} personByIdField: ${queryStr}`);
     return (await this.service.repoPerson.query(queryStr))?.[0];
   }
 
@@ -320,8 +312,7 @@ export class OrganizationResolver {
   @UseInterceptors(new ExecutionContextValidationInterceptor(new BaseExecutionContextValidator()))
   async allOrganizations(@Context() context, @Info() info) {
     return await Gql.processQuery(this.service, context, info, Organization,
-      async select => await this.service.repoOrganization.query(
-        `SELECT ${select} FROM organizations`));
+              'SELECT * FROM organizations');
   }
 
   // Args:

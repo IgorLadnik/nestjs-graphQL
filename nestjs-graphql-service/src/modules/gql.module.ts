@@ -150,7 +150,7 @@ export class PersonResolver {
   @UseInterceptors(DurationInterceptor)
   @UseInterceptors(new ExecutionContextValidationInterceptor(new BaseExecutionContextValidator()))
   async personsBySurname(@Context() context, @Info() info, @Args('surname') surname: string) {
-    return Gql.processQuery(this.service, context, info, Person,
+    return await Gql.processQuery(this.service, context, info, Person,
        `SELECT * FROM persons WHERE surname = \'${surname}\'`);
   }
 
@@ -169,7 +169,7 @@ export class PersonResolver {
     }
     where += ')';
 
-    return Gql.processQuery(this.service, context, info, Person,
+    return await Gql.processQuery(this.service, context, info, Person,
       `SELECT * 
            FROM persons 
            INNER JOIN relations 

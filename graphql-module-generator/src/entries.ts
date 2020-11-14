@@ -1,7 +1,7 @@
 import * as utils from './utils';
 
 export const NL = '\r\n';
-export const T = '    ';
+export const T = '  ';
 export const suffixResolverClass = 'Resolver';
 export const ReplaceToken = '/*ReplaceToken*/';
 

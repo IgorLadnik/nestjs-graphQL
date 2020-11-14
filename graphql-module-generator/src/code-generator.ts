@@ -92,7 +92,7 @@ export class GqlResolversGenerator {
 
             for (let field of item.fields)
                 if (!utils.isScalarField(field) || utils.isListField(field))
-                    resolver.addEntry(new ResolverFieldEntry(field));
+                    resolver.addEntry(new ResolverFieldEntry(field), resolverName);
 
             resolvers.push(resolver);
         }

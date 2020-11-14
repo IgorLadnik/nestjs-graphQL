@@ -91,15 +91,15 @@ class SqlService extends SqlTransaction {
     await Gql.processField(info, affiliations, Organization, this.connection,
       'FROM organizations WHERE _id IN organization_id');
 
-  parentsInOrganization = async (info, organizations) =>
+  parentInOrganization = async (info, organizations) =>
     await Gql.processField(info, organizations, Organization, this.connection,
       'FROM organizations WHERE _id IN parent_id');
 
-  roles = async (info, affiliations) =>
+  roleInAffiliation = async (info, affiliations) =>
     await Gql.processField(info, affiliations, Role, this.connection,
       'FROM roles WHERE _id IN role_id');
 
-  p2 = async (info, relations) =>
+  p2InRelation = async (info, relations) =>
     await Gql.processField(info, relations, Person, this.connection,
       'FROM persons WHERE _id IN p2_id');
 }

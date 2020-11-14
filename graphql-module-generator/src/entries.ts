@@ -1,7 +1,7 @@
 import * as utils from './utils';
 
 export const NL = '\r\n';
-export const TAB = '\t';
+export const T = '\t';
 export const suffixResolverClass = 'Resolver';
 export const ReplaceToken = '/*ReplaceToken*/';
 
@@ -16,6 +16,8 @@ export interface IResolverEntry {
 }
 
 const types = new Array<string>();
+
+const serviceMethods = new Array<string>();
 
 const getUniqueComplexTypes = (argTypes: string[]) =>
     argTypes.filter(utils.onlyUnique).filter(t =>
@@ -95,18 +97,25 @@ export class ResolverMutationEntry  extends BaseEntry implements IResolverEntry 
 }
 
 export class ResolverFieldEntry extends BaseEntry implements IResolverEntry {
+    name: string;
+    isArray: boolean;
+    type: string;
+
     constructor(entry: any) {
         super(entry);
+
+        this.name = this.entry.name;
+        this.isArray = this.entry.types.includes('ListType');
+        this.type = this.entry.types[this.entry.types.length - 1];
     }
 
     genCode(parent: string): void {
         const fr = this.f();
         const beforeArgs = fr.args === '' ? '' : `, `;
-        const args = (beforeArgs + fr.args).replace(/@Args/g, `${NL}${TAB}${TAB}${TAB}@Args`);
+        const args = (beforeArgs + fr.args).replace(/@Args/g, `${NL}${T}${T}${T}@Args`);
         const argsRealType = fr.argsRealType.replace(/, {/g, `,${NL}  //         {`);
         const theType = this.entry.types[this.entry.types.length - 1];
         types.push(theType);
-        const isArray = this.entry.types.includes('ListType');
         const innerCode =
             `${NL}` +
             `  // Args:   ${argsRealType}${NL}` +
@@ -114,7 +123,7 @@ export class ResolverFieldEntry extends BaseEntry implements IResolverEntry {
             `  @ResolveField('${this.entry.name}')${NL}` +
             useDurationInterceptor +
             `  async ${this.entry.name}(@Context() context, @Info() info, @Parent() parent: any${args}) {${NL}` +
-            `    return Gql.getFromCache(context, \'${theType}\', ${isArray}, ..., ...); //@@` +`${NL}` +
+            `    return Gql.getFromCache(context, \'${theType}\', ${this.isArray}, ..., ...); //@@` +`${NL}` +
             `  }${NL}` +
             `${ReplaceToken}`;
         code = code.replace(`${ReplaceToken}`, innerCode);
@@ -126,8 +135,20 @@ export class Resolver {
 
     constructor(private name: string) { }
 
-    addEntry(entry: IResolverEntry) {
-        this.entries.push(entry);
+    addEntry(entry: IResolverEntry, resolverName = '') {
+        this.entries.push(entry as IResolverEntry);
+
+        if (resolverName.length > 0) {
+            const entryEx = entry as ResolverFieldEntry;
+            if (entryEx) {
+                const methodName = `${entryEx.name}In${resolverName}`;
+                const collection = `${resolverName.toLocaleLowerCase()}s`;
+                const method = `  ${methodName} = async (info, ${collection}) =>` + `${NL}` +
+                    `    await Gql.processField(info, ${collection}, ${entryEx.type}, this.connection,` +`${NL}` +
+                    `      \'FROM ... WHERE ... IN ...\'  //@@`;
+                serviceMethods.push(method);
+            }
+        }
     }
 
     genCode() {
@@ -222,11 +243,10 @@ export class Resolver {
         uniqueComplexTypes.forEach(t => head +=
             `    this.repo${t} = this.connection.getRepository(${t});${NL}`);
         head += `  }${NL}${NL}` +
-            '  // Fields  - from database' + `${NL}` + `${NL}` +
-            '  // TODO: Insert database access methods here. They use ' + `${NL}` +
-            '  //       await Gql.processField(info, ..., ..., this.connection, \'FORM ... WHERE ... IN ...\')' +
-            `${NL}` + `${NL}` +
-            `}${NL}${NL}`;
+            '  // Fields  - from database' + `${NL}` + `${NL}`;
+
+        serviceMethods?.forEach(m => head += m + `${NL}${NL}`);
+        head +=  `}${NL}${NL}`;
 
         const tail =
             '@Module({' + `${NL}` +
@@ -241,7 +261,7 @@ export class Resolver {
             '      context: ({ req }) => ({ req }),' + `${NL}` +
             '    }),' + `${NL}` +
             '  ],' + `${NL}` +
-            `  providers: [${NL}${TAB}SqlService,${NL}${TAB}${ReplaceToken}` + `${NL}` +
+            `  providers: [${NL}${T}SqlService,${NL}${T}${ReplaceToken}` + `${NL}` +
             '})' + `${NL}` +
             'export class GqlModule {' + `${NL}` +
             '  constructor() {' + `${NL}` +
@@ -257,7 +277,7 @@ export class Resolver {
 
         let str = '';
         for (let s of resolverNames)
-            str += s + `${suffixResolverClass},${NL}${TAB}`;
+            str += s + `${suffixResolverClass},${NL}${T}`;
         str += ']';
 
         return head +

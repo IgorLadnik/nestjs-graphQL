@@ -12,7 +12,7 @@ __dirname = '';
 if (isFromWeb)
   process.chdir(__dirname);
 
-import { Injectable, Module, UseInterceptors, UseGuards } from '../../node_modules/@nestjs/common';
+import { Module, UseInterceptors, UseGuards, Injectable } from '../../node_modules/@nestjs/common';
 import {
   Resolver,
   Query,
@@ -21,7 +21,7 @@ import {
   ResolveField,
   Parent,
   Context,
-  Info
+  Info,
 } from '../../node_modules/@nestjs/graphql';
 import { ConfigService } from '../../node_modules/config-lib';
 import { logger } from '../../node_modules/logger-lib';
@@ -35,11 +35,11 @@ import { SqlConfig } from '../../node_modules/sql-base-lib';
 
 import { Person } from '../sql/entities/person.entity';
 import { Affiliation } from '../sql/entities/affiliation.entity';
+import { Relation } from '../sql/entities/relation.entity';
 import { Organization } from '../sql/entities/organization.entity';
 import { Role } from '../sql/entities/role.entity';
-import { Relation } from '../sql/entities/relation.entity';
 
-const {
+const { 
   ExecutionContextValidationInterceptor,
   DurationInterceptor,
   BaseExecutionContextValidator,
@@ -81,34 +81,39 @@ class SqlService extends SqlTransaction {
 
   affiliationsInPerson = async (info, persons) =>
     await Gql.processField(info, persons, Affiliation, this.connection,
-      'FROM affiliations WHERE person_id IN _id');
+        'FROM affiliations WHERE person_id IN _id');
 
   relationsInPerson = async (info, persons) =>
     await Gql.processField(info, persons, Relation, this.connection,
-      'FROM relations WHERE p1_id IN _id');
-
-  organizationsInAffiliation = async (info, affiliations) =>
-    await Gql.processField(info, affiliations, Organization, this.connection,
-      'FROM organizations WHERE _id IN organization_id');
+        'FROM relations WHERE p1_id IN _id');
 
   parentInOrganization = async (info, organizations) =>
     await Gql.processField(info, organizations, Organization, this.connection,
-      'FROM organizations WHERE _id IN parent_id');
+        'FROM organizations WHERE _id IN parent_id');
+
+  organizationInAffiliation = async (info, affiliations) =>
+    await Gql.processField(info, affiliations, Organization, this.connection,
+        'FROM organizations WHERE _id IN organization_id');
 
   roleInAffiliation = async (info, affiliations) =>
     await Gql.processField(info, affiliations, Role, this.connection,
-      'FROM roles WHERE _id IN role_id');
+        'FROM roles WHERE _id IN role_id');
+
+  // p1InRelation = async (info, relations) =>
+  //   await Gql.processField(info, relations, Person, this.connection,
+  //     'FROM ... WHERE ... IN ...');  //@@
 
   p2InRelation = async (info, relations) =>
     await Gql.processField(info, relations, Person, this.connection,
-      'FROM persons WHERE _id IN p2_id');
+        'FROM persons WHERE _id IN p2_id');
+
 }
 
 @Resolver('Person')
 export class PersonResolver {
   constructor(private service: SqlService) { }
 
-  // Args:
+  // Args:   
   // Return: NonNullType,ListType,NonNullType,NamedType,Person
   @Query()
   @UseGuards(GqlAuthGuard, TlsGuard)
@@ -116,7 +121,7 @@ export class PersonResolver {
   @UseInterceptors(new ExecutionContextValidationInterceptor(new BaseExecutionContextValidator()))
   async allPersons(@Context() context, @Info() info) {
     return await Gql.processQuery(this.service, context, info, Person,
-                'SELECT * FROM persons');
+        'SELECT * FROM persons');
   }
 
   // Args:   {id: NonNullType,NamedType,String}
@@ -125,33 +130,33 @@ export class PersonResolver {
   @UseGuards(GqlAuthGuard, TlsGuard)
   @UseInterceptors(DurationInterceptor)
   @UseInterceptors(new ExecutionContextValidationInterceptor(new BaseExecutionContextValidator()))
-  async personById(@Context() context, @Info() info, @Args('id') id: string) {
+  async personById(@Context() context, @Info() info, @Args('id') id: any) {
     const persons = await Gql.processQuery(this.service, context, info, Person,
-      `SELECT * FROM persons WHERE id = \'${id}\'`,
-      undefined,
-      (data, errors) => {
-        if (errors) {
-          errors.splice(0, errors.length);
-          errors.push({message: '[transformed] Query failed'});
-        }
-        else {
-          const result = data.personById;
-          if (result && result.surname)
-            result.surname += ' [transformed] Maharadjah of Lucknow';
-        }
-      });
+        `SELECT * FROM persons WHERE id = \'${id}\'`,
+        undefined,
+        (data, errors) => {
+          if (errors) {
+            errors.splice(0, errors.length);
+            errors.push({message: '[transformed] Query failed'});
+          }
+          else {
+            const result = data.personById;
+            if (result && result.surname)
+              result.surname += ' [transformed] Maharadjah of Lucknow';
+          }
+        });
     return persons && persons.length > 0 ? persons[0] : [];
   }
 
   // Args:   {surname: NonNullType,NamedType,String}
-  // Return: NamedType,Person
+  // Return: ListType,NamedType,Person
   @Query()
   @UseGuards(GqlAuthGuard, TlsGuard)
   @UseInterceptors(DurationInterceptor)
   @UseInterceptors(new ExecutionContextValidationInterceptor(new BaseExecutionContextValidator()))
-  async personsBySurname(@Context() context, @Info() info, @Args('surname') surname: string) {
+  async personsBySurname(@Context() context, @Info() info, @Args('surname') surname: any) {
     return await Gql.processQuery(this.service, context, info, Person,
-       `SELECT * FROM persons WHERE surname = \'${surname}\'`);
+        `SELECT * FROM persons WHERE surname = \'${surname}\'`);
   }
 
   // Args:   {relationQueryArg: NonNullType,ListType,NamedType,RelationQueryArg}
@@ -170,12 +175,12 @@ export class PersonResolver {
     where += ')';
 
     return await Gql.processQuery(this.service, context, info, Person,
-      `SELECT * 
+        `SELECT * 
            FROM persons 
            INNER JOIN relations 
            ON persons._id = relations.p1_id OR persons._id = relations.p2_id
            WHERE ${where}`,
-      select => select.replace('_id', 'persons._id').replace(',id,', ',persons.id,'));
+        select => select.replace('_id', 'persons._id').replace(',id,', ',persons.id,'));
   }
 
   // Args:   {personsInput: NonNullType,ListType,NamedType,PersonInput}
@@ -209,7 +214,7 @@ export class PersonResolver {
             const affiliation = new Affiliation();
             affiliation.id = aff.id;
             affiliation.organization = await this.organizationById(
-              aff.organizationId,
+                aff.organizationId,
             );
             affiliation.role = await this.roleById(aff.roleId);
             affiliation.since = aff.since;
@@ -243,9 +248,9 @@ export class PersonResolver {
     catch (err) {
       isOK = false;
       message =
-        err.code === 'EREQUEST'
-          ? 'Entries already exist in database. '
-          : `${err}`;
+          err.code === 'EREQUEST'
+              ? 'Entries already exist in database. '
+              : `${err}`;
       logger.error(`Transaction rolled back: ${message}`);
     }
 
@@ -267,14 +272,14 @@ export class PersonResolver {
   }
 
   private organizationById = async (organizationId): Promise<Organization> =>
-    (await this.service.repoOrganization
-        .query(`SELECT * FROM organizations WHERE id = \'${organizationId}\'`)
-    )?.[0];
+      (await this.service.repoOrganization
+              .query(`SELECT * FROM organizations WHERE id = \'${organizationId}\'`)
+      )?.[0];
 
   private roleById = async (roleId): Promise<Role> =>
-    (await this.service.repoRole
-        .query(`SELECT * FROM roles WHERE id = \'${roleId}\'`)
-    )?.[0];
+      (await this.service.repoRole
+              .query(`SELECT * FROM roles WHERE id = \'${roleId}\'`)
+      )?.[0];
 
   // Args:   {organization: NamedType,String},
   //         {role: NamedType,String},
@@ -282,10 +287,10 @@ export class PersonResolver {
   // Return: ListType,NamedType,Affiliation
   @ResolveField('affiliations')
   @UseInterceptors(DurationInterceptor)
-  async affiliations(@Context() context, @Info() info, @Parent() parent: any,
-    @Args('organization') organization: any,
-    @Args('role') role: any,
-    @Args('since') since: any) {
+  async affiliations(@Context() context, @Info() info, @Parent() parent: any, 
+      @Args('organization') organization: any, 
+      @Args('role') role: any, 
+      @Args('since') since: any) {
     return Gql.getFromCache(context, 'Affiliation', true, parent._id, 'person_id');
   }
 
@@ -293,9 +298,8 @@ export class PersonResolver {
   // Return: ListType,NamedType,Relation
   @ResolveField('relations')
   @UseInterceptors(DurationInterceptor)
-  async relations(@Context() context, @Info() info,
-                  @Parent() parent: any,
-                  @Args('kind') kind: any) {
+  async relations(@Context() context, @Info() info, @Parent() parent: any, 
+      @Args('kind') kind: any) {
     return Gql.getFromCache(context, 'Relation', true, parent._id, 'p1_id');
   }
 }
@@ -304,7 +308,7 @@ export class PersonResolver {
 export class OrganizationResolver {
   constructor(private service: SqlService) { }
 
-  // Args:
+  // Args:   
   // Return: NonNullType,ListType,NonNullType,NamedType,Organization
   @Query()
   @UseGuards(GqlAuthGuard, TlsGuard)
@@ -312,10 +316,10 @@ export class OrganizationResolver {
   @UseInterceptors(new ExecutionContextValidationInterceptor(new BaseExecutionContextValidator()))
   async allOrganizations(@Context() context, @Info() info) {
     return await Gql.processQuery(this.service, context, info, Organization,
-              'SELECT * FROM organizations');
+        'SELECT * FROM organizations');
   }
 
-  // Args:
+  // Args:   
   // Return: NamedType,Organization
   @ResolveField('parent')
   @UseInterceptors(DurationInterceptor)
@@ -328,7 +332,7 @@ export class OrganizationResolver {
 export class AffiliationResolver {
   constructor(private service: SqlService) { }
 
-  // Args:
+  // Args:   
   // Return: NonNullType,NamedType,Organization
   @ResolveField('organization')
   @UseInterceptors(DurationInterceptor)
@@ -336,7 +340,7 @@ export class AffiliationResolver {
     return Gql.getFromCache(context, 'Organization', false, parent.organization_id, '_id');
   }
 
-  // Args:
+  // Args:   
   // Return: NamedType,Role
   @ResolveField('role')
   @UseInterceptors(DurationInterceptor)
@@ -349,15 +353,15 @@ export class AffiliationResolver {
 export class RelationResolver {
   constructor(private service: SqlService) { }
 
-  // Args:
+  // Args:   
   // Return: NonNullType,NamedType,Person
-  @ResolveField('p1')
-  @UseInterceptors(DurationInterceptor)
-  async p1(@Context() context, @Parent() parent: any) {
-    return []; //@@
-  }
+  // @ResolveField('p1')
+  // @UseInterceptors(DurationInterceptor)
+  // async p1(@Context() context, @Info() info, @Parent() parent: any) {
+  //   return Gql.getFromCache(context, 'Person', false, ..., ...); //@@
+  // }
 
-  // Args:
+  // Args:   
   // Return: NonNullType,NamedType,Person
   @ResolveField('p2')
   @UseInterceptors(DurationInterceptor)
@@ -379,12 +383,12 @@ export class RelationResolver {
     }),
   ],
   providers: [
-    SqlService,
-    PersonResolver,
-    OrganizationResolver,
-    AffiliationResolver,
-    RelationResolver,
-  ],
+  SqlService,
+  PersonResolver,
+  OrganizationResolver,
+  AffiliationResolver,
+  RelationResolver,
+  ]
 })
 export class GqlModule {
   constructor() {
@@ -392,7 +396,7 @@ export class GqlModule {
   }
 
   onModuleInit() {
-    logger.log(`GqlModule has been initialized`);
+    logger.log('GqlModule has been initialized');
   }
 }
 

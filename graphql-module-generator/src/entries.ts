@@ -145,7 +145,7 @@ export class Resolver {
                 const collection = `${resolverName.toLocaleLowerCase()}s`;
                 const method = `${T}${methodName} = async (info, ${collection}) =>${NL}` +
                     `${T}${T}await Gql.processField(info, ${collection}, ${entryEx.type}, this.connection,${NL}` +
-                    `${T}${T}${T}\'FROM ... WHERE ... IN ...\'  //@@`;
+                    `${T}${T}${T}\'FROM ... WHERE ... IN ...\');  //@@`;
                 serviceMethods.push(method);
             }
         }
@@ -185,11 +185,11 @@ export class Resolver {
             `${T}process.chdir(__dirname);${NL}` +
             `${NL}` +
 
-            'import { Module, UseInterceptors, UseGuards } from \'../../node_modules/@nestjs/common\';' + `${NL}` +
+            'import { Module, UseInterceptors, UseGuards, Injectable } from \'../../node_modules/@nestjs/common\';' + `${NL}` +
             'import {' + `${NL}` +
             '  Resolver,'  + `${NL}` +
             '  Query,' + `${NL}` +
-            '  Mutation' + `${NL}` +
+            '  Mutation,' + `${NL}` +
             '  Args,' + `${NL}` +
             '  ResolveField,'  + `${NL}` +
             '  Parent,' + `${NL}` +
@@ -199,7 +199,7 @@ export class Resolver {
             'import { ConfigService } from \'../../node_modules/config-lib\';' + `${NL}` +
             'import { logger } from \'../../node_modules/logger-lib\';' + `${NL}` +
             'import { AuthModule, GqlAuthGuard } from \'../../node_modules/auth-lib\';' + `${NL}` +
-            'import { DirHolder } from \'../modules-tools/dir-holder\';' + `${NL}` +
+            'import { DirHolder } from \'../../node_modules/module-loader-lib\';' + `${NL}` +
             'import { Gql } from \'../../node_modules/gql-module-lib\';' + `${NL}` +
             'import { SqlTransaction } from \'../../node_modules/sql-base-lib\';' + `${NL}` +
             'import { Connection } from \'../../node_modules/typeorm\';' + `${NL}` +
@@ -218,21 +218,21 @@ export class Resolver {
             '} = require(\'../../node_modules/interceptors-lib\');' + `${NL}` +
             `${NL}` +
 
-            'if (isFromWeb) {' + `${NL}` +
+            'if (isFromWeb)' + `${NL}` +
             `${T}process.chdir(DirHolder.getProjectDir());${NL}` +
             'else {' + `${NL}` +
             `${T}const configService = new ConfigService();${NL}` +
             `${T}const urlJoin = require(\'url-join\');${NL}` +
             `${T}typePaths = [urlJoin(configService.get(\'GQL_URL\'), configService.get(\'GQL_SCHEMA\'))];${NL}` +
             `${T}path = configService.get(\'GQL_PATH\');${NL}` +
-            '}' + `${NL}` +
-            `${NL}` +
+            '}' +
+            `${NL}${NL}` +
 
             'const { getGraphQLModule } = require(isFromWeb ? \`./node_modules/gql-module-lib\` : \'gql-module-lib\');'
-            + `${NL}` + `${NL}` +
+            + `${NL}${NL}` +
 
             '///////////////////////////////////////////////////////////////////////////////////////////////////////' +
-            `${NL}` + `${NL}` + `${NL}` +
+            `${NL}${NL}` +
             '@Injectable()' + `${NL}` +
             'class SqlService extends SqlTransaction {' + `${NL}`;
 
@@ -259,7 +259,7 @@ export class Resolver {
             `${T}${T}${T}typePaths,${NL}` +
             `${T}${T}${T}path,${NL}` +
             `${T}${T}${T}context: ({ req }) => ({ req }),${NL}` +
-            `${T}${T}}}),${NL}` +
+            `${T}${T}}),${NL}` +
             `${T}],${NL}` +
             `${T}providers: [${NL}${T}SqlService,${NL}${T}${ReplaceToken}${NL}` +
             '})' + `${NL}` +

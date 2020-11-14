@@ -1,13 +1,13 @@
 import * as utils from './utils';
 
 export const NL = '\r\n';
-export const T = '\t';
+export const T = '    ';
 export const suffixResolverClass = 'Resolver';
 export const ReplaceToken = '/*ReplaceToken*/';
 
-const useGuard = `  @UseGuards(GqlAuthGuard, TlsGuard)${NL}`;
-const useDurationInterceptor = `  @UseInterceptors(DurationInterceptor)${NL}`;
-const useUserValidationInterceptor = `  @UseInterceptors(new ExecutionContextValidationInterceptor(new BaseExecutionContextValidator()))${NL}`;
+const useGuard = `${T}@UseGuards(GqlAuthGuard, TlsGuard)${NL}`;
+const useDurationInterceptor = `${T}@UseInterceptors(DurationInterceptor)${NL}`;
+const useUserValidationInterceptor = `${T}@UseInterceptors(new ExecutionContextValidationInterceptor(new BaseExecutionContextValidator()))${NL}`;
 
 let code = '';
 
@@ -57,15 +57,15 @@ export class ResolverQueryEntry extends BaseEntry implements IResolverEntry {
         types.push(theType);
         const innerCode =
             `${NL}` +
-            `  // Args:   ${fr.argsRealType}${NL}` +
-            `  // Return: ${this.entry.types}${NL}` +
-            `  @Query()${NL}` +
+            `${T}// Args:   ${fr.argsRealType}${NL}` +
+            `${T}// Return: ${this.entry.types}${NL}` +
+            `${T}@Query()${NL}` +
             useGuard +
             useDurationInterceptor +
             useUserValidationInterceptor +
-            `  async ${this.entry.name}(@Context() context, @Info() info${yy}${fr.args}) {${NL}` +
-            `    return await Gql.processQuery(this.service, context, info, \'${theType}\', ...); //@@` +`${NL}` +
-            `  }${NL}` +
+            `${T}async ${this.entry.name}(@Context() context, @Info() info${yy}${fr.args}) {${NL}` +
+            `${T}${T}return await Gql.processQuery(this.service, context, info, \'${theType}\', ...); //@@${NL}` +
+            `${T}}${NL}` +
             `${ReplaceToken}`;
         code = code.replace(`${ReplaceToken}`, innerCode);
     }
@@ -81,16 +81,16 @@ export class ResolverMutationEntry  extends BaseEntry implements IResolverEntry 
         types.push(this.entry.types[this.entry.types.length - 1]);
         const innerCode =
             `${NL}` +
-            `  // Args:   ${fr.argsRealType}${NL}` +
-            `  // Return: ${this.entry.types}${NL}` +
-            `  @Mutation()${NL}` +
+            `${T}// Args:   ${fr.argsRealType}${NL}` +
+            `${T}// Return: ${this.entry.types}${NL}` +
+            `${T}@Mutation()${NL}` +
             useGuard +
             useDurationInterceptor +
             useUserValidationInterceptor +
-            `  async ${this.entry.name}(${fr.args}): Promise<string> {${NL}` +
+            `${T}async ${this.entry.name}(${fr.args}): Promise<string> {${NL}` +
             `${NL}` +
-            `    return '';  //@@${NL}` +
-            `  }${NL}` +
+            `${T}${T}return '';  //@@${NL}` +
+            `${T}}${NL}` +
             `${ReplaceToken}`;
         code = code.replace(`${ReplaceToken}`, innerCode);
     }
@@ -113,18 +113,18 @@ export class ResolverFieldEntry extends BaseEntry implements IResolverEntry {
         const fr = this.f();
         const beforeArgs = fr.args === '' ? '' : `, `;
         const args = (beforeArgs + fr.args).replace(/@Args/g, `${NL}${T}${T}${T}@Args`);
-        const argsRealType = fr.argsRealType.replace(/, {/g, `,${NL}  //         {`);
+        const argsRealType = fr.argsRealType.replace(/, {/g, `,${NL}${T}//         {`);
         const theType = this.entry.types[this.entry.types.length - 1];
         types.push(theType);
         const innerCode =
             `${NL}` +
-            `  // Args:   ${argsRealType}${NL}` +
-            `  // Return: ${this.entry.types}${NL}` +
-            `  @ResolveField('${this.entry.name}')${NL}` +
+            `${T}// Args:   ${argsRealType}${NL}` +
+            `${T}// Return: ${this.entry.types}${NL}` +
+            `${T}@ResolveField('${this.entry.name}')${NL}` +
             useDurationInterceptor +
-            `  async ${this.entry.name}(@Context() context, @Info() info, @Parent() parent: any${args}) {${NL}` +
-            `    return Gql.getFromCache(context, \'${theType}\', ${this.isArray}, ..., ...); //@@` +`${NL}` +
-            `  }${NL}` +
+            `${T}async ${this.entry.name}(@Context() context, @Info() info, @Parent() parent: any${args}) {${NL}` +
+            `${T}${T}return Gql.getFromCache(context, \'${theType}\', ${this.isArray}, ..., ...); //@@${NL}` +
+            `${T}}${NL}` +
             `${ReplaceToken}`;
         code = code.replace(`${ReplaceToken}`, innerCode);
     }
@@ -143,9 +143,9 @@ export class Resolver {
             if (entryEx) {
                 const methodName = `${entryEx.name}In${resolverName}`;
                 const collection = `${resolverName.toLocaleLowerCase()}s`;
-                const method = `  ${methodName} = async (info, ${collection}) =>` + `${NL}` +
-                    `    await Gql.processField(info, ${collection}, ${entryEx.type}, this.connection,` +`${NL}` +
-                    `      \'FROM ... WHERE ... IN ...\'  //@@`;
+                const method = `${T}${methodName} = async (info, ${collection}) =>${NL}` +
+                    `${T}${T}await Gql.processField(info, ${collection}, ${entryEx.type}, this.connection,${NL}` +
+                    `${T}${T}${T}\'FROM ... WHERE ... IN ...\'  //@@`;
                 serviceMethods.push(method);
             }
         }
@@ -155,7 +155,7 @@ export class Resolver {
         code +=
             `@Resolver('${this.name}')${NL}` +
             `export class ${this.name}${suffixResolverClass} {${NL}` +
-            `  constructor(private service: SqlService) { }${NL}` +
+            `${T}constructor(private service: SqlService) { }${NL}` +
             `${ReplaceToken}` +
             `}${NL}`;
 
@@ -182,7 +182,7 @@ export class Resolver {
             `${NL}` +
 
             'if (isFromWeb)' + `${NL}` +
-            '  process.chdir(__dirname);' + `${NL}` +
+            `${T}process.chdir(__dirname);${NL}` +
             `${NL}` +
 
             'import { Module, UseInterceptors, UseGuards } from \'../../node_modules/@nestjs/common\';' + `${NL}` +
@@ -219,12 +219,12 @@ export class Resolver {
             `${NL}` +
 
             'if (isFromWeb) {' + `${NL}` +
-            '  process.chdir(DirHolder.getProjectDir());' + `${NL}` +
+            `${T}process.chdir(DirHolder.getProjectDir());${NL}` +
             'else {' + `${NL}` +
-            '  const configService = new ConfigService();' + `${NL}` +
-            '  const urlJoin = require(\'url-join\');' + `${NL}` +
-            '  typePaths = [urlJoin(configService.get(\'GQL_URL\'), configService.get(\'GQL_SCHEMA\'))];' + `${NL}` +
-            '  path = configService.get(\'GQL_PATH\');' + `${NL}` +
+            `${T}const configService = new ConfigService();${NL}` +
+            `${T}const urlJoin = require(\'url-join\');${NL}` +
+            `${T}typePaths = [urlJoin(configService.get(\'GQL_URL\'), configService.get(\'GQL_SCHEMA\'))];${NL}` +
+            `${T}path = configService.get(\'GQL_PATH\');${NL}` +
             '}' + `${NL}` +
             `${NL}` +
 
@@ -238,39 +238,39 @@ export class Resolver {
 
         uniqueComplexTypes.forEach(t => head += `  repo${t};${NL}`);
         head += `${NL}` +
-            '  constructor(connection: Connection) {'+ `${NL}` +
-            '    super(connection);' + `${NL}` + `${NL}`;
+            `${T}constructor(connection: Connection) {${NL}` +
+            `${T}${T}super(connection);${NL}${NL}`;
         uniqueComplexTypes.forEach(t => head +=
-            `    this.repo${t} = this.connection.getRepository(${t});${NL}`);
-        head += `  }${NL}${NL}` +
-            '  // Fields  - from database' + `${NL}` + `${NL}`;
+            `${T}${T}this.repo${t} = this.connection.getRepository(${t});${NL}`);
+        head += `${T}}${NL}${NL}` +
+            `${T}// Fields  - from database${NL}${NL}`;
 
         serviceMethods?.forEach(m => head += m + `${NL}${NL}`);
-        head +=  `}${NL}${NL}`;
+        head += `}${NL}${NL}`;
 
         const tail =
             '@Module({' + `${NL}` +
-            '  imports: [' + `${NL}` +
-            '    AuthModule,' + `${NL}` +
-            '    TypeOrmModule.forRoot(SqlConfig.getTypeOrmConfig()),' + `${NL}` +
-            '    getGraphQLModule(isFromWeb).forRoot({' + `${NL}` +
-            '      debug: false,' + `${NL}` +
-            '      playground: true,' + `${NL}` +
-            '      typePaths,' + `${NL}` +
-            '      path,' + `${NL}` +
-            '      context: ({ req }) => ({ req }),' + `${NL}` +
-            '    }),' + `${NL}` +
-            '  ],' + `${NL}` +
-            `  providers: [${NL}${T}SqlService,${NL}${T}${ReplaceToken}` + `${NL}` +
+            `${T}imports: [` + `${NL}` +
+            `${T}${T}AuthModule,` + `${NL}` +
+            `${T}${T}TypeOrmModule.forRoot(SqlConfig.getTypeOrmConfig()),${NL}` +
+            `${T}${T}getGraphQLModule(isFromWeb).forRoot({${NL}` +
+            `${T}${T}${T}debug: false,${NL}` +
+            `${T}${T}${T}playground: true,${NL}` +
+            `${T}${T}${T}typePaths,${NL}` +
+            `${T}${T}${T}path,${NL}` +
+            `${T}${T}${T}context: ({ req }) => ({ req }),${NL}` +
+            `${T}${T}}}),${NL}` +
+            `${T}],${NL}` +
+            `${T}providers: [${NL}${T}SqlService,${NL}${T}${ReplaceToken}${NL}` +
             '})' + `${NL}` +
             'export class GqlModule {' + `${NL}` +
-            '  constructor() {' + `${NL}` +
-            '    logger.log(\'GqlModule has been created\');' + `${NL}` +
-            '  }' + `${NL}` +
+            `${T}constructor() {${NL}` +
+            `${T}${T}logger.log(\'GqlModule has been created\');${NL}` +
+            `${T}}${NL}` +
             `${NL}` +
-            '  onModuleInit() {' + `${NL}` +
-            '    logger.log(\'GqlModule has been initialized\');' + `${NL}` +
-            '  }' + `${NL}` +
+            `${T}onModuleInit() {${NL}` +
+            `${T}${T}logger.log(\'GqlModule has been initialized\');${NL}` +
+            `${T}}${NL}` +
             '}' + `${NL}` +
             `${NL}` +
             'export function getModule() { return GqlModule; }' + `${NL}`;

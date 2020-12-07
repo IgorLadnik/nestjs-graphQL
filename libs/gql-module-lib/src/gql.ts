@@ -6,29 +6,29 @@ const emptySpace = '        ';
 const xx = `${emptySpace}database query: `;
 
 export class Gql {
-  static async processQuery(service, context, info, cls, queryTemplate: string,
+  static async processQuery(service, context, info, clsName, queryTemplate: string,
                             fnAdjustSelect = undefined, fnTransformResponse = undefined) {
     context.cache = new Dictionary<any>();
     context.transformResponse = fnTransformResponse;
 
-    let strSelect = Gql.begin(info, cls);
+    let strSelect = Gql.begin(info, clsName);
     if (fnAdjustSelect)
       strSelect = fnAdjustSelect(strSelect);
-    logger.log(`${emptySpace}begin database operations: ${cls.name}, ${queryTemplate}`);
-    let items = await Gql.executeQuery(cls, service.connection, queryTemplate.replace('*', strSelect));
-    Gql.end(items, cls);
+    logger.log(`${emptySpace}begin database operations: ${clsName}, ${queryTemplate}`);
+    let items = await Gql.executeQuery(clsName, service.connection, queryTemplate.replace('*', strSelect));
+    Gql.end(items, clsName);
     await Gql.dbToCache(service, items, context.cache, info);
-    logger.log(`${emptySpace}end database operations: ${cls.name}, ${queryTemplate}`);
+    logger.log(`${emptySpace}end database operations: ${clsName}, ${queryTemplate}`);
 
     return items;
   }
 
-  static async processField(info, items, cls, connection, queryTemplate) {
-    const strSelect = Gql.begin(info, cls);
+  static async processField(info, items, clsName, connection, queryTemplate) {
+    const strSelect = Gql.begin(info, clsName);
     const q = Gql.parseSelectQueryTemplate(queryTemplate);
-    const arr = await Gql.bringDataFromDb(connection, items, cls, q.in_,
+    const arr = await Gql.bringDataFromDb(connection, items, clsName, q.in_,
       `SELECT ${strSelect} FROM ${q.table}`, q.where);
-    Gql.end(arr, cls);
+    Gql.end(arr, clsName);
     return arr;
   }
 
@@ -194,7 +194,7 @@ export class Gql {
       Object.keys(instances.columns).forEach(c => columns.push(c));
   }
 
-  private static async bringDataFromDb(connection, arr: any[], cls: any, idName: string,
+  private static async bringDataFromDb(connection, arr: any[], clsName: any, idName: string,
                         selectFrom: string, whereIdName = '_id'): Promise<any[]> {
     if (!arr || arr.length === 0)
       return;
@@ -205,14 +205,14 @@ export class Gql {
 
     const q = _.uniq(ids).join();
     const queryStr = `${selectFrom} WHERE ${whereIdName} IN (${q})`;
-    return await Gql.executeQuery(cls, connection, queryStr);
+    return await Gql.executeQuery(clsName, connection, queryStr);
   }
 
-  private static async executeQuery(cls, connection, queryStr: string): Promise<any[]> {
-    logger.log(`${xx} ${cls.name},  ${queryStr}`);
+  private static async executeQuery(clsName, connection, queryStr: string): Promise<any[]> {
+    logger.log(`${xx} ${clsName},  ${queryStr}`);
     let result: any[];
     try {
-      result = await connection.getRepository(cls).query(queryStr);
+      result = await connection.getRepository(clsName).query(queryStr);
     }
     catch (err) {
       logger.error(err);
@@ -253,8 +253,8 @@ export class Gql {
     return { table, where, in_ };
   }
 
-  private static begin(info, cls) {
-    const token = `${cls.name.toLowerCase()}s`;
+  private static begin(info, clsName) {
+    const token = `${clsName.toLowerCase()}s`;
     const select = Gql.getSelectParams(info);
     const columnName = `${token}Columns`;
     if (!Gql[columnName])
@@ -262,9 +262,9 @@ export class Gql {
     return this.getSelectColumns(select, Gql[columnName]);
   }
 
-  private static end(arr, cls) {
-    const token = `${cls.name.toLowerCase()}s`;
-    Gql.appendWithType(arr, cls.name);
+  private static end(arr, clsName) {
+    const token = `${clsName.toLowerCase()}s`;
+    Gql.appendWithType(arr, clsName);
     Gql.saveColumnsNames(Gql[`${token}Columns`], arr);
   }
 

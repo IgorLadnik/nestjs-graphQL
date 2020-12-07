@@ -70,33 +70,33 @@ class SqlService extends SqlTransaction {
   constructor(connection: Connection) {
     super(connection);
 
-    this.repoPerson = this.connection.getRepository(Person);
-    this.repoAffiliation = this.connection.getRepository(Affiliation);
-    this.repoRelation = this.connection.getRepository(Relation);
-    this.repoOrganization = this.connection.getRepository(Organization);
-    this.repoRole = this.connection.getRepository(Role);
+    this.repoPerson = this.connection.getRepository('Person');
+    this.repoAffiliation = this.connection.getRepository('Affiliation');
+    this.repoRelation = this.connection.getRepository('Relation');
+    this.repoOrganization = this.connection.getRepository('Organization');
+    this.repoRole = this.connection.getRepository('Role');
   }
 
   // Fields  - from database
 
   affiliationsInPerson = async (info, persons) =>
-    await Gql.processField(info, persons, Affiliation, this.connection,
+    await Gql.processField(info, persons, 'Affiliation', this.connection,
         'FROM affiliations WHERE person_id IN _id');
 
   relationsInPerson = async (info, persons) =>
-    await Gql.processField(info, persons, Relation, this.connection,
+    await Gql.processField(info, persons, 'Relation', this.connection,
         'FROM relations WHERE p1_id IN _id');
 
   parentInOrganization = async (info, organizations) =>
-    await Gql.processField(info, organizations, Organization, this.connection,
+    await Gql.processField(info, organizations, 'Organization', this.connection,
         'FROM organizations WHERE _id IN parent_id');
 
   organizationInAffiliation = async (info, affiliations) =>
-    await Gql.processField(info, affiliations, Organization, this.connection,
+    await Gql.processField(info, affiliations, 'Organization', this.connection,
         'FROM organizations WHERE _id IN organization_id');
 
   roleInAffiliation = async (info, affiliations) =>
-    await Gql.processField(info, affiliations, Role, this.connection,
+    await Gql.processField(info, affiliations, 'Role', this.connection,
         'FROM roles WHERE _id IN role_id');
 
   // p1InRelation = async (info, relations) =>
@@ -104,7 +104,7 @@ class SqlService extends SqlTransaction {
   //     'FROM ... WHERE ... IN ...');  //@@
 
   p2InRelation = async (info, relations) =>
-    await Gql.processField(info, relations, Person, this.connection,
+    await Gql.processField(info, relations, 'Person', this.connection,
         'FROM persons WHERE _id IN p2_id');
 
 }
@@ -120,7 +120,7 @@ export class PersonResolver {
   @UseInterceptors(DurationInterceptor)
   @UseInterceptors(new ExecutionContextValidationInterceptor(new BaseExecutionContextValidator()))
   async allPersons(@Context() context, @Info() info) {
-    return await Gql.processQuery(this.service, context, info, Person,
+    return await Gql.processQuery(this.service, context, info, 'Person',
         'SELECT * FROM persons');
   }
 
@@ -131,7 +131,7 @@ export class PersonResolver {
   @UseInterceptors(DurationInterceptor)
   @UseInterceptors(new ExecutionContextValidationInterceptor(new BaseExecutionContextValidator()))
   async personById(@Context() context, @Info() info, @Args('id') id: any) {
-    const persons = await Gql.processQuery(this.service, context, info, Person,
+    const persons = await Gql.processQuery(this.service, context, info, 'Person',
         `SELECT * FROM persons WHERE id = \'${id}\'`,
         undefined,
         (data, errors) => {
@@ -155,7 +155,7 @@ export class PersonResolver {
   @UseInterceptors(DurationInterceptor)
   @UseInterceptors(new ExecutionContextValidationInterceptor(new BaseExecutionContextValidator()))
   async personsBySurname(@Context() context, @Info() info, @Args('surname') surname: any) {
-    return await Gql.processQuery(this.service, context, info, Person,
+    return await Gql.processQuery(this.service, context, info, 'Person',
         `SELECT * FROM persons WHERE surname = \'${surname}\'`);
   }
 
@@ -174,7 +174,7 @@ export class PersonResolver {
     }
     where += ')';
 
-    return await Gql.processQuery(this.service, context, info, Person,
+    return await Gql.processQuery(this.service, context, info, 'Person',
         `SELECT * 
            FROM persons 
            INNER JOIN relations 
@@ -213,9 +213,7 @@ export class PersonResolver {
           for (const aff of inputPerson.affiliations) {
             const affiliation = new Affiliation();
             affiliation.id = aff.id;
-            affiliation.organization = await this.organizationById(
-                aff.organizationId,
-            );
+            affiliation.organization = await this.organizationById(aff.organizationId);
             affiliation.role = await this.roleById(aff.roleId);
             affiliation.since = aff.since;
             affiliation.person = person;
@@ -226,7 +224,7 @@ export class PersonResolver {
         if (inputPerson.relations && inputPerson.relations.length > 0) {
           person.relations = new Array<Relation>();
           for (const rel of inputPerson.relations) {
-            const relation = new Relation();
+            const relation = new Relation();;
             relation.id = rel.id;
             relation.p1 = person;
             relation.p2 = await this.personByIdField(rel.p2Id);
@@ -242,7 +240,8 @@ export class PersonResolver {
         if (person.affiliations)
           await queryRunner.manager.save(person.affiliations);
 
-        if (person.relations) await queryRunner.manager.save(person.relations);
+        if (person.relations)
+          await queryRunner.manager.save(person.relations);
       }
     }
     catch (err) {
@@ -265,18 +264,18 @@ export class PersonResolver {
     return message;
   }
 
-  private personByIdField = async (arg): Promise<Person> => {
+  private personByIdField = async (arg): Promise<any> => {
     const strWhere = typeof arg === 'string' ? `id = \'${arg}\'` : `_id = ${arg.p2_id}`;
     const queryStr = `SELECT * FROM persons WHERE ${strWhere}`;
     return (await this.service.repoPerson.query(queryStr))?.[0];
   }
 
-  private organizationById = async (organizationId): Promise<Organization> =>
+  private organizationById = async (organizationId): Promise<any> =>
       (await this.service.repoOrganization
               .query(`SELECT * FROM organizations WHERE id = \'${organizationId}\'`)
       )?.[0];
 
-  private roleById = async (roleId): Promise<Role> =>
+  private roleById = async (roleId): Promise<any> =>
       (await this.service.repoRole
               .query(`SELECT * FROM roles WHERE id = \'${roleId}\'`)
       )?.[0];
@@ -315,7 +314,7 @@ export class OrganizationResolver {
   @UseInterceptors(DurationInterceptor)
   @UseInterceptors(new ExecutionContextValidationInterceptor(new BaseExecutionContextValidator()))
   async allOrganizations(@Context() context, @Info() info) {
-    return await Gql.processQuery(this.service, context, info, Organization,
+    return await Gql.processQuery(this.service, context, info, 'Organization',
         'SELECT * FROM organizations');
   }
 
@@ -372,7 +371,6 @@ export class RelationResolver {
 
 @Module({
   imports: [
-    AuthModule,
     TypeOrmModule.forRoot(SqlConfig.getTypeOrmConfig()),
     getGraphQLModule(isFromWeb).forRoot({
       debug: false,

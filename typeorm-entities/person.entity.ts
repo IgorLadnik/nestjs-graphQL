@@ -1,4 +1,9 @@
-import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  OneToMany
+} from 'typeorm';
 import { Affiliation } from './affiliation.entity';
 import { Relation } from './relation.entity';
 

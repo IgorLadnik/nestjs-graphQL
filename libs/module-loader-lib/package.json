@@ -26,6 +26,7 @@
     "guid-typescript": "^1.0.9",
     "logger-lib": "../logger-lib",
     "path": "^0.12.7",
+    "rimraf": "^3.0.2",
     "typescript": "^3.9.7",
     "url-join": "^4.0.1"
   }

@@ -49,7 +49,7 @@ import { GqlResolversGenerator } from './code-generator';
     console.log('\n\r* GENERATED CODE *************************************');
     console.log(codeModuleGen.generatedCode);
 
-    fs.writeFileSync('../generated-resolvers.ts', codeModuleGen.generatedCode, { encoding: 'utf8', flag: 'w' });
+    fs.writeFileSync('../generated-gql.module.ts', codeModuleGen.generatedCode, { encoding: 'utf8', flag: 'w' });
 
 
 })();

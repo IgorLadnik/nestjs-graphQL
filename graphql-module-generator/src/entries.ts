@@ -144,7 +144,7 @@ export class Resolver {
                 const methodName = `${entryEx.name}In${resolverName}`;
                 const collection = `${resolverName.toLocaleLowerCase()}s`;
                 const method = `${T}${methodName} = async (info, ${collection}) =>${NL}` +
-                    `${T}${T}await Gql.processField(info, ${collection}, ${entryEx.type}, this.connection,${NL}` +
+                    `${T}${T}await Gql.processField(info, ${collection}, \'${entryEx.type}\', this.connection,${NL}` +
                     `${T}${T}${T}\'FROM ... WHERE ... IN ...\');  //@@`;
                 serviceMethods.push(method);
             }
@@ -241,7 +241,7 @@ export class Resolver {
             `${T}constructor(connection: Connection) {${NL}` +
             `${T}${T}super(connection);${NL}${NL}`;
         uniqueComplexTypes.forEach(t => head +=
-            `${T}${T}this.repo${t} = this.connection.getRepository(${t});${NL}`);
+            `${T}${T}this.repo${t} = this.connection.getRepository(\'${t}\');${NL}`);
         head += `${T}}${NL}${NL}` +
             `${T}// Fields  - from database${NL}${NL}`;
 
@@ -251,7 +251,6 @@ export class Resolver {
         const tail =
             '@Module({' + `${NL}` +
             `${T}imports: [` + `${NL}` +
-            `${T}${T}AuthModule,` + `${NL}` +
             `${T}${T}TypeOrmModule.forRoot(SqlConfig.getTypeOrmConfig()),${NL}` +
             `${T}${T}getGraphQLModule(isFromWeb).forRoot({${NL}` +
             `${T}${T}${T}debug: false,${NL}` +

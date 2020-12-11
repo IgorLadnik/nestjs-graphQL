@@ -4,7 +4,7 @@ mkdir .\src\sql
 mkdir .\src\sql\entities
 xcopy ..\typeorm-entities\*entity.* .\src\sql\entities\* /y
 
-rem Buld
+rem Build
 nest build
 
 

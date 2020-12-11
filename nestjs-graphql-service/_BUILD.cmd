@@ -4,7 +4,7 @@ mkdir .\src\sql
 mkdir .\src\sql\entities
 xcopy ..\typeorm-entities\*entity.* .\src\sql\entities\* /y
 
-rem Buld
+rem Build
 cmd /c nest build
 
 rem Copy GraphQL schema and module to a file-server working directory

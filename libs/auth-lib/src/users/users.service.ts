@@ -11,5 +11,5 @@ export class UsersService extends SqlTransaction {
 
   userByNames = async (userName: string): Promise<User> =>
     (await this.connection.getRepository('User')
-      .query(`SELECT * FROM users11 WHERE userName = \'${userName.toLowerCase()}\'`))?.[0];
+      .query(`SELECT * FROM users WHERE userName = \'${userName.toLowerCase()}\'`))?.[0];
 }

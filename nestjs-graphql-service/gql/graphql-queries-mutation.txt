@@ -1,6 +1,6 @@
 query AllPersons {
-	allPersons {
-  	id
+  allPersons {
+    id
     givenName
     surname
     address
@@ -26,7 +26,7 @@ query AllPersons {
       }
       kind
     }
-  } 
+  }
 }
 
 query PersonById {
@@ -35,16 +35,16 @@ query PersonById {
     surname
     affiliations {
       organization {
-        name,
+        name
         parent {
           name
         }
-      },
+      }
       role {
-        name,
+        name
         description
       }
-    	since      
+      since
     }
     relations {
       p2 {
@@ -79,14 +79,9 @@ query PersonsBySurname {
 }
 
 query PersonsByRelations {
-  personsByRelation(relationQueryArg: [
-    {
-      kind: "friends"
-    },
-    {
-      kind: "committee"
-    }
-  ]) {
+  personsByRelation(
+    relationQueryArg: [{ kind: "friends" }, { kind: "committee" }]
+  ) {
     givenName
     surname
   }
@@ -104,65 +99,46 @@ query AllOrganizations {
 }
 
 mutation Mutation {
-	createPersons(personsInput: [
-    {
-    	id: "p_06"
-   	 	givenName: "Amit"
-    	surname: "Srivastava"
-    	born: 2001
-    	affiliations: [
-        {
-          id: "a_09"
-          organizationId: "o_b1"
-          roleId: "l_st"
-          since: 2019
-        }
-      ],
-      relations: [
-      	{
-          id: "r_05"
-          p2Id: "p_03"
-          kind: "superior"
-          since: 2019
-          notes: "a"    
-        }
-        {
-          id: "r_06"
-          p2Id: "p_04"
-          kind: "friends"
-          since: 2019
-          notes: "the closest friend"    
-        }
-    ] 
-  }
-  {
-    id: "p_07"
-    givenName: "Matteo"
-    surname: "Feretti"
-    born: 1999
-    affiliations: [
-        {
-          id: "a_10"
-          organizationId: "o_a2"
-          roleId: "l_st"
-          since: 2017
-        }
-    	]
-      relations: [
-        {
-					id: "r_07"
-          p2Id: "p_01"
-          kind: "superior"
-          since: 2017
-        }
-        {
-					id: "r_08"
-          p2Id: "p_02"
-          kind: "superior"
-          since: 2017
-        }
-    	]
-    }
-  ])
+  createPersons(
+    personsInput: [
+      {
+        id: "p_06"
+        givenName: "Amit"
+        surname: "Srivastava"
+        born: 2001
+        affiliations: [
+          { id: "a_09", organizationId: "o_b1", roleId: "l_st", since: 2019 }
+        ]
+        relations: [
+          {
+            id: "r_05"
+            p2Id: "p_03"
+            kind: "superior"
+            since: 2019
+            notes: "a"
+          }
+          {
+            id: "r_06"
+            p2Id: "p_04"
+            kind: "friends"
+            since: 2019
+            notes: "the closest friend"
+          }
+        ]
+      }
+      {
+        id: "p_07"
+        givenName: "Matteo"
+        surname: "Feretti"
+        born: 1999
+        affiliations: [
+          { id: "a_10", organizationId: "o_a2", roleId: "l_st", since: 2017 }
+        ]
+        relations: [
+          { id: "r_07", p2Id: "p_01", kind: "superior", since: 2017 }
+          { id: "r_08", p2Id: "p_02", kind: "superior", since: 2017 }
+        ]
+      }
+    ]
+  )
 }
-

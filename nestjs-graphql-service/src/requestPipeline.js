@@ -196,7 +196,7 @@ function processGraphQLRequest(config, requestContext) {
                 }
             }
 
-            // graphQL transformer //////////////////////////////////
+            // GraphQL transformer //////////////////////////////////
             const func = requestContext.context.transformResponse;
             if (func)
                 func(response.data, response.errors);

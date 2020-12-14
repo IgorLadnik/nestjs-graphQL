@@ -1,4 +1,4 @@
-// This file was modified in order to load graohQL schema from Web.
+// This file was modified in order to load GraphQL schema from Web.
 
 'use strict';
 Object.defineProperty(exports, '__esModule', { value: true });
